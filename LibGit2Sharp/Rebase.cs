@@ -70,10 +70,10 @@ namespace LibGit2Sharp
         /// <param name="branch">The branch to rebase.</param>
         /// <param name="upstream">The starting commit to rebase.</param>
         /// <param name="onto">The branch to rebase onto.</param>
-        /// <param name="committer">The <see cref="Signature"/> of who added the change to the repository.</param>
+        /// <param name="committer">The <see cref="Identity"/> of who added the change to the repository.</param>
         /// <param name="options">The <see cref="RebaseOptions"/> that specify the rebase behavior.</param>
         /// <returns>true if completed successfully, false if conflicts encountered.</returns>
-        public virtual RebaseResult Start(Branch branch, Branch upstream, Branch onto, Signature committer, RebaseOptions options)
+        public virtual RebaseResult Start(Branch branch, Branch upstream, Branch onto, Identity committer, RebaseOptions options)
         {
             Ensure.ArgumentNotNull(upstream, "upstream");
 
@@ -132,9 +132,9 @@ namespace LibGit2Sharp
         /// <summary>
         /// Continue the current rebase.
         /// </summary>
-        /// <param name="committer">The <see cref="Signature"/> of who added the change to the repository.</param>
+        /// <param name="committer">The <see cref="Identity"/> of who added the change to the repository.</param>
         /// <param name="options">The <see cref="RebaseOptions"/> that specify the rebase behavior.</param>
-        public virtual RebaseResult Continue(Signature committer, RebaseOptions options)
+        public virtual RebaseResult Continue(Identity committer, RebaseOptions options)
         {
             Ensure.ArgumentNotNull(committer, "committer");
 

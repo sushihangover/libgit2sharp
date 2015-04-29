@@ -15,12 +15,12 @@ namespace LibGit2Sharp
         /// </summary>
         /// <param name="rebaseOperationHandle">Handle to the rebase operation.</param>
         /// <param name="repository">Repository in which rebase operation is being run.</param>
-        /// <param name="committer">Committer signature to use for the rebased commits.</param>
+        /// <param name="committer">Committer Identity to use for the rebased commits.</param>
         /// <param name="options">Options controlling rebase behavior.</param>
-        /// <returns>RebaseResult - describing the result of the rebase operation.</returns>
+        /// <returns>RebaseResult that describes the result of the rebase operation.</returns>
         public static RebaseResult Run(RebaseSafeHandle rebaseOperationHandle,
             Repository repository,
-            Signature committer,
+            Identity committer,
             RebaseOptions options)
         {
             Ensure.ArgumentNotNull(rebaseOperationHandle, "rebaseOperationHandle");
@@ -53,7 +53,7 @@ namespace LibGit2Sharp
             return rebaseResult;
         }
 
-        private static RebaseResult CompleteRebase(RebaseSafeHandle rebaseOperationHandle, Signature committer, RebaseResult rebaseResult)
+        private static RebaseResult CompleteRebase(RebaseSafeHandle rebaseOperationHandle, Identity committer, RebaseResult rebaseResult)
         {
             long totalStepCount = Proxy.git_rebase_operation_entrycount(rebaseOperationHandle);
             GitRebaseOptions gitRebaseOptions = new GitRebaseOptions()
@@ -80,7 +80,7 @@ namespace LibGit2Sharp
         /// <param name="options"></param>
         /// <param name="stepToApplyInfo"></param>
         /// <returns></returns>
-        private static RebaseResult RunRebaseStep(RebaseSafeHandle rebaseOperationHandle, Repository repository, Signature committer, RebaseOptions options, RebaseStepInfo stepToApplyInfo)
+        private static RebaseResult RunRebaseStep(RebaseSafeHandle rebaseOperationHandle, Repository repository, Identity committer, RebaseOptions options, RebaseStepInfo stepToApplyInfo)
         {
             RebaseStepResult rebaseStepResult = null;
             RebaseResult rebaseSequenceResult = null;
@@ -145,7 +145,7 @@ namespace LibGit2Sharp
             return rebaseSequenceResult;
         }
 
-        private static RebaseStepResult ApplyPickStep(RebaseSafeHandle rebaseOperationHandle, Repository repository, Signature committer, RebaseOptions options, RebaseStepInfo stepToApplyInfo)
+        private static RebaseStepResult ApplyPickStep(RebaseSafeHandle rebaseOperationHandle, Repository repository, Identity committer, RebaseOptions options, RebaseStepInfo stepToApplyInfo)
         {
             RebaseStepResult rebaseStepResult;
 

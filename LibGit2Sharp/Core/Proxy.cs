@@ -1612,14 +1612,14 @@ namespace LibGit2Sharp.Core
 
         public static GitRebaseCommitResult git_rebase_commit(
             RebaseSafeHandle rebase,
-            Signature author,
-            Signature committer)
+            Identity author,
+            Identity committer)
         {
             Ensure.ArgumentNotNull(rebase, "rebase");
             Ensure.ArgumentNotNull(committer, "committer");
 
-            using (SignatureSafeHandle committerHandle = committer.BuildHandle())
-            using (SignatureSafeHandle authorHandle = author.SafeBuildHandle())
+            using (SignatureSafeHandle committerHandle = committer.BuildNowSignatureHandle())
+            using (SignatureSafeHandle authorHandle = author.SafeBuildNowSignatureHandle())
             {
                 GitRebaseCommitResult commitResult = new GitRebaseCommitResult();
 
@@ -1667,12 +1667,12 @@ namespace LibGit2Sharp.Core
 
         public static void git_rebase_finish(
             RebaseSafeHandle rebase,
-            Signature signature)
+            Identity committer)
         {
             Ensure.ArgumentNotNull(rebase, "rebase");
-            Ensure.ArgumentNotNull(signature, "signature");
+            Ensure.ArgumentNotNull(committer, "committer");
 
-            using (var signatureHandle = signature.BuildHandle())
+            using (var signatureHandle = committer.BuildNowSignatureHandle())
             {
                 int result = NativeMethods.git_rebase_finish(rebase, signatureHandle);
                 Ensure.ZeroResult(result);
@@ -2567,8 +2567,16 @@ namespace LibGit2Sharp.Core
             SignatureSafeHandle handle;
 
             int res = NativeMethods.git_signature_new(out handle, name, email, when.ToSecondsSinceEpoch(),
-                (int)when.Offset.TotalMinutes);
+                                                      (int)when.Offset.TotalMinutes);
+            Ensure.ZeroResult(res);
 
+            return handle;
+        }
+
+        public static SignatureSafeHandle git_signature_now(string name, string email)
+        {
+            SignatureSafeHandle handle;
+            int res = NativeMethods.git_signature_now(out handle, name, email);
             Ensure.ZeroResult(res);
 
             return handle;

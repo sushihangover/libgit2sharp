@@ -65,7 +65,7 @@ namespace LibGit2Sharp.Tests
                     },
                 };
 
-                RebaseResult rebaseResult = repo.Rebase.Start(branch, upstream, onto, Constants.Signature, options);
+                RebaseResult rebaseResult = repo.Rebase.Start(branch, upstream, onto, Constants.Identity, options);
 
                 // Validation:
                 Assert.Equal(RebaseStatus.Complete, rebaseResult.Status);
@@ -114,7 +114,7 @@ namespace LibGit2Sharp.Tests
                 repo.Checkout(topicBranch2Name);
                 Branch b = repo.Branches[topicBranch2Name];
 
-                RebaseResult result = repo.Rebase.Start(b, b, null, Constants.Signature, new RebaseOptions());
+                RebaseResult result = repo.Rebase.Start(b, b, null, Constants.Identity, new RebaseOptions());
                 Assert.Equal(0, result.TotalStepCount);
                 Assert.Equal(RebaseStatus.Complete, result.Status);
                 Assert.Equal(0, result.CompletedStepCount);
@@ -229,7 +229,7 @@ namespace LibGit2Sharp.Tests
 
                 };
 
-                repo.Rebase.Start(null, upstreamBranch, null, Constants.Signature2, options);
+                repo.Rebase.Start(null, upstreamBranch, null, Constants.Identity2, options);
 
                 Assert.Equal(true, wasCheckoutNotifyCalledForResetingHead);
                 Assert.Equal(true, wasCheckoutProgressCalledForResetingHead);
@@ -295,7 +295,7 @@ namespace LibGit2Sharp.Tests
                     CheckoutNotifyFlags = CheckoutNotifyFlags.Updated,
                 };
 
-                RebaseResult rebaseResult = repo.Rebase.Start(branch, upstream, onto, Constants.Signature, options);
+                RebaseResult rebaseResult = repo.Rebase.Start(branch, upstream, onto, Constants.Identity, options);
 
                 // Verify that we have a conflict.
                 Assert.Equal(CurrentOperation.RebaseMerge, repo.Info.CurrentOperation);
@@ -326,7 +326,7 @@ namespace LibGit2Sharp.Tests
 
                 // Clear the flags:
                 wasCheckoutProgressCalled = false; wasCheckoutNotifyCalled = false;
-                RebaseResult continuedRebaseResult = repo.Rebase.Continue(Constants.Signature, options);
+                RebaseResult continuedRebaseResult = repo.Rebase.Continue(Constants.Identity, options);
 
                 Assert.NotNull(continuedRebaseResult);
                 Assert.Equal(RebaseStatus.Complete, continuedRebaseResult.Status);
@@ -358,7 +358,7 @@ namespace LibGit2Sharp.Tests
                 Branch upstream = repo.Branches[conflictBranch1Name];
                 Branch onto = repo.Branches[conflictBranch1Name];
 
-                RebaseResult rebaseResult = repo.Rebase.Start(branch, upstream, onto, Constants.Signature, null);
+                RebaseResult rebaseResult = repo.Rebase.Start(branch, upstream, onto, Constants.Identity, null);
 
                 // Verify that we have a conflict.
                 Assert.Equal(RebaseStatus.Conflicts, rebaseResult.Status);
@@ -390,7 +390,7 @@ namespace LibGit2Sharp.Tests
                 Branch upstream = repo.Branches[conflictBranch1Name];
                 Branch onto = repo.Branches[conflictBranch1Name];
 
-                RebaseResult rebaseResult = repo.Rebase.Start(branch, upstream, onto, Constants.Signature, null);
+                RebaseResult rebaseResult = repo.Rebase.Start(branch, upstream, onto, Constants.Identity, null);
 
                 // Verify that we have a conflict.
                 Assert.Equal(RebaseStatus.Conflicts, rebaseResult.Status);
@@ -436,7 +436,7 @@ namespace LibGit2Sharp.Tests
                 Branch upstream = repo.Branches[conflictBranch1Name];
                 Branch onto = repo.Branches[conflictBranch1Name];
 
-                RebaseResult rebaseResult = repo.Rebase.Start(branch, upstream, onto, Constants.Signature, null);
+                RebaseResult rebaseResult = repo.Rebase.Start(branch, upstream, onto, Constants.Identity, null);
 
                 // Verify that we have a conflict.
                 Assert.Equal(RebaseStatus.Conflicts, rebaseResult.Status);
@@ -444,7 +444,7 @@ namespace LibGit2Sharp.Tests
                 Assert.Equal(CurrentOperation.RebaseMerge, repo.Info.CurrentOperation);
 
                 Assert.Throws<LibGit2SharpException>(() =>
-                    repo.Rebase.Start(branch, upstream, onto, Constants.Signature, null));
+                    repo.Rebase.Start(branch, upstream, onto, Constants.Identity, null));
             }
         }
 
@@ -460,7 +460,7 @@ namespace LibGit2Sharp.Tests
                 repo.Checkout(topicBranch1Name);
 
                 Assert.Throws<NotFoundException>(() =>
-                    repo.Rebase.Continue(Constants.Signature, new RebaseOptions()));
+                    repo.Rebase.Continue(Constants.Identity, new RebaseOptions()));
 
                 Assert.Throws<NotFoundException>(() =>
                     repo.Rebase.Abort());
@@ -520,15 +520,22 @@ namespace LibGit2Sharp.Tests
                     }
                 };
 
-                repo.Rebase.Start(null, upstreamBranch, null, Constants.Signature2, options);
+                repo.Rebase.Start(null, upstreamBranch, null, Constants.Identity2, options);
+                ObjectId secondCommitExpectedTreeId = new ObjectId("ac04bf04980c9be72f64ba77fd0d9088a40ed681");
+                Signature secondCommitAuthorSignature = Constants.Signature;
+                Identity secondCommitCommiterIdentity = Constants.Identity2;
 
-                List<CompletedRebaseStepInfo> expectedRebaseResults = new List<CompletedRebaseStepInfo>()
-                {
-                    new CompletedRebaseStepInfo(null, true),
-                    new CompletedRebaseStepInfo(repo.Lookup<Commit>("ebdea37ecf583fb7fa5c806a1c00b82f3987fbaa"), false),
-                };
+                Assert.Equal(2, rebaseResults.Count);
+                Assert.True(rebaseResults[0].WasPatchAlreadyApplied);
 
-                Assert.Equal<CompletedRebaseStepInfo>(expectedRebaseResults, rebaseResults, new CompletedRebaseStepInfoEqualityComparer());
+                Assert.False(rebaseResults[1].WasPatchAlreadyApplied);
+                Assert.NotNull(rebaseResults[1].Commit);
+
+                // This is the expected tree ID of the new commit.
+                Assert.True(ObjectId.Equals(secondCommitExpectedTreeId, rebaseResults[1].Commit.Tree.Id));
+                Assert.True(Signature.Equals(secondCommitAuthorSignature, rebaseResults[1].Commit.Author));
+                Assert.Equal<string>(secondCommitCommiterIdentity.Name, rebaseResults[1].Commit.Committer.Name, StringComparer.Ordinal);
+                Assert.Equal<string>(secondCommitCommiterIdentity.Email, rebaseResults[1].Commit.Committer.Email, StringComparer.Ordinal);
             }
         }
 
