@@ -24,7 +24,7 @@ namespace LibGit2Sharp
         /// The rebase operation has hit a user requested stop point
         /// (edit, reword, ect.)
         /// </summary>
-        RequestedStop,
+        Stop,
     };
     
     /// <summary>
