@@ -539,6 +539,21 @@ namespace LibGit2Sharp.Tests
             }
         }
 
+        [Fact]
+        public void RebasingInBareRepositoryThrows()
+        {
+            string path = SandboxBareTestRepo();
+            using (var repo = new Repository(path))
+            {
+                Branch rebaseUpstreamBranch = repo.Branches["refs/heads/test"];
+
+                Assert.NotNull(rebaseUpstreamBranch);
+                Assert.Throws<BareRepositoryException>(() => repo.Rebase.Start(null, rebaseUpstreamBranch, null, Constants.Identity, new RebaseOptions()));
+                Assert.Throws<BareRepositoryException>(() => repo.Rebase.Continue(Constants.Identity, new RebaseOptions()));
+                Assert.Throws<BareRepositoryException>(() => repo.Rebase.Abort());
+            }
+        }
+
         private void ConstructRebaseTestRepository(Repository repo)
         {
             // Constructs a graph that looks like:

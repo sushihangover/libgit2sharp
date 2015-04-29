@@ -79,6 +79,8 @@ namespace LibGit2Sharp
 
             options = options ?? new RebaseOptions();
 
+            EnsureNonBareRepo();
+
             if (this.repository.Info.CurrentOperation != CurrentOperation.None)
             {
                 throw new LibGit2SharpException(string.Format(
@@ -139,6 +141,8 @@ namespace LibGit2Sharp
             Ensure.ArgumentNotNull(committer, "committer");
 
             options = options ?? new RebaseOptions();
+
+            EnsureNonBareRepo();
 
             using (GitCheckoutOptsWrapper checkoutOptionsWrapper = new GitCheckoutOptsWrapper(options))
             {
@@ -201,6 +205,8 @@ namespace LibGit2Sharp
         {
             options = options ?? new RebaseOptions();
 
+            EnsureNonBareRepo();
+
             using (GitCheckoutOptsWrapper checkoutOptionsWrapper = new GitCheckoutOptsWrapper(options))
             {
                 GitRebaseOptions gitRebaseOptions = new GitRebaseOptions()
@@ -241,6 +247,14 @@ namespace LibGit2Sharp
                                                   currentStepIndex,
                                                   totalStepCount);
                 return stepInfo;
+            }
+        }
+
+        private void EnsureNonBareRepo()
+        {
+            if (this.repository.Info.IsBare)
+            {
+                throw new BareRepositoryException("Rebase operations in a bare repository are not supported.");
             }
         }
     }
