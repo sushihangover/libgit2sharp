@@ -70,8 +70,8 @@ namespace LibGit2Sharp
         /// <param name="branch">The branch to rebase.</param>
         /// <param name="upstream">The starting commit to rebase.</param>
         /// <param name="onto">The branch to rebase onto.</param>
-        /// <param name="committer"></param>
-        /// <param name="options"></param>
+        /// <param name="committer">The <see cref="Signature"/> of who added the change to the repository.</param>
+        /// <param name="options">The <see cref="RebaseOptions"/> that specify the rebase behavior.</param>
         /// <returns>true if completed successfully, false if conflicts encountered.</returns>
         public virtual RebaseResult Start(Branch branch, Branch upstream, Branch onto, Signature committer, RebaseOptions options)
         {
@@ -133,7 +133,7 @@ namespace LibGit2Sharp
         /// Continue the current rebase.
         /// </summary>
         /// <param name="committer">The <see cref="Signature"/> of who added the change to the repository.</param>
-        /// <param name="options">The <see cref="RebaseOptions"/> that specify the commit behavior.</param>
+        /// <param name="options">The <see cref="RebaseOptions"/> that specify the rebase behavior.</param>
         public virtual RebaseResult Continue(Signature committer, RebaseOptions options)
         {
             Ensure.ArgumentNotNull(committer, "committer");
@@ -190,11 +190,28 @@ namespace LibGit2Sharp
         /// </summary>
         public virtual void Abort()
         {
-            GitRebaseOptions gitRebaseOptions = new GitRebaseOptions();
+            Abort(null);
+        }
 
-            using (RebaseSafeHandle rebase = Proxy.git_rebase_open(repository.Handle, gitRebaseOptions))
+        /// <summary>
+        /// Abort the rebase operation.
+        /// </summary>
+        /// <param name="options">The <see cref="RebaseOptions"/> that specify the rebase behavior.</param>
+        public virtual void Abort(RebaseOptions options)
+        {
+            options = options ?? new RebaseOptions();
+
+            using (GitCheckoutOptsWrapper checkoutOptionsWrapper = new GitCheckoutOptsWrapper(options))
             {
-                Proxy.git_rebase_abort(rebase);
+                GitRebaseOptions gitRebaseOptions = new GitRebaseOptions()
+                {
+                    checkout_options = checkoutOptionsWrapper.Options,
+                };
+
+                using (RebaseSafeHandle rebase = Proxy.git_rebase_open(repository.Handle, gitRebaseOptions))
+                {
+                    Proxy.git_rebase_abort(rebase);
+                }
             }
         }
 

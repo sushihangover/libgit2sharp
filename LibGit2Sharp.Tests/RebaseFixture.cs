@@ -191,17 +191,48 @@ namespace LibGit2Sharp.Tests
                 Assert.False(repo.RetrieveStatus().IsDirty);
 
                 bool wasCheckoutProgressCalled = false;
+                bool wasCheckoutProgressCalledForResetingHead = false;
                 bool wasCheckoutNotifyCalled = false;
+                bool wasCheckoutNotifyCalledForResetingHead = false;
+
+                bool startedApplyingSteps = false;
 
                 RebaseOptions options = new RebaseOptions()
                 {
-                    OnCheckoutProgress = (x, y, z) => wasCheckoutProgressCalled = true,
-                    OnCheckoutNotify = (x, y) => { wasCheckoutNotifyCalled = true; return true; },
+                    OnCheckoutProgress = (x, y, z) =>
+                    {
+                        if (startedApplyingSteps)
+                        {
+                            wasCheckoutProgressCalled = true;
+                        }
+                        else
+                        {
+                            wasCheckoutProgressCalledForResetingHead = true;
+                        }
+                    },
+                    OnCheckoutNotify = (x, y) =>
+                    {
+                        if (startedApplyingSteps)
+                        {
+                            wasCheckoutNotifyCalled = true;
+                        }
+                        else
+                        {
+                            wasCheckoutNotifyCalledForResetingHead = true;
+                        }
+
+                        return true;
+                    },
                     CheckoutNotifyFlags = CheckoutNotifyFlags.Updated,
+
+                    RebaseStepStarting = x => startedApplyingSteps = true,
+
                 };
 
                 repo.Rebase.Start(null, upstreamBranch, null, Constants.Signature2, options);
 
+                Assert.Equal(true, wasCheckoutNotifyCalledForResetingHead);
+                Assert.Equal(true, wasCheckoutProgressCalledForResetingHead);
                 Assert.Equal(true, wasCheckoutNotifyCalled);
                 Assert.Equal(true, wasCheckoutProgressCalled);
 
@@ -261,7 +292,7 @@ namespace LibGit2Sharp.Tests
                     RebaseStepCompleted = x => afterStepCallCount++,
                     OnCheckoutProgress = (x, y, z) => wasCheckoutProgressCalled = true,
                     OnCheckoutNotify = (x, y) => { wasCheckoutNotifyCalled = true; return true; },
-                    CheckoutNotifyFlags = CheckoutNotifyFlags.Updated | CheckoutNotifyFlags.Conflict,
+                    CheckoutNotifyFlags = CheckoutNotifyFlags.Updated,
                 };
 
                 RebaseResult rebaseResult = repo.Rebase.Start(branch, upstream, onto, Constants.Signature, options);
@@ -368,10 +399,24 @@ namespace LibGit2Sharp.Tests
                 Assert.Equal(0, rebaseResult.CompletedStepCount);
                 Assert.Equal(3, rebaseResult.TotalStepCount);
 
-                repo.Rebase.Abort();
-                Assert.False(repo.RetrieveStatus().IsDirty);
-                Assert.True(repo.Index.IsFullyMerged);
+                // Set up the callbacks to verify that checkout progress / notify
+                // callbacks are called.
+                bool wasCheckoutProgressCalled = false;
+                bool wasCheckoutNotifyCalled = false;
+                RebaseOptions options = new RebaseOptions()
+                {
+                    OnCheckoutProgress = (x, y, z) => wasCheckoutProgressCalled = true,
+                    OnCheckoutNotify = (x, y) => { wasCheckoutNotifyCalled = true; return true; },
+                    CheckoutNotifyFlags = CheckoutNotifyFlags.Updated,
+                };
+
+                repo.Rebase.Abort(options);
+                Assert.False(repo.RetrieveStatus().IsDirty, "Repository workdir is dirty after Rebase.Abort.");
+                Assert.True(repo.Index.IsFullyMerged, "Repository index is not fully merged after Rebase.Abort.");
                 Assert.Equal(CurrentOperation.None, repo.Info.CurrentOperation);
+
+                Assert.True(wasCheckoutProgressCalled, "Checkout progress callback was not called during Rebase.Abort.");
+                Assert.True(wasCheckoutNotifyCalled, "Checkout notify callback was not called during Rebase.Abort.");
             }
         }
 
