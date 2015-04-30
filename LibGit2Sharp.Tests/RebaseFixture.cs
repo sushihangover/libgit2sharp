@@ -4,6 +4,7 @@ using System.Linq;
 using LibGit2Sharp.Tests.TestHelpers;
 using Xunit;
 using Xunit.Extensions;
+using System.IO;
 
 namespace LibGit2Sharp.Tests
 {
@@ -390,6 +391,53 @@ namespace LibGit2Sharp.Tests
                     repo.Rebase.Continue(Constants.Identity, null));
 
                 Assert.True(repo.Index.IsFullyMerged);
+            }
+        }
+
+        [Fact]
+        public void CanSpecifyFileConflictStrategy()
+        {
+            SelfCleaningDirectory scd = BuildSelfCleaningDirectory();
+            var path = Repository.Init(scd.DirectoryPath);
+            using (Repository repo = new Repository(path))
+            {
+                ConstructRebaseTestRepository(repo);
+
+                repo.Checkout(topicBranch1Name);
+                Assert.False(repo.RetrieveStatus().IsDirty);
+
+                Branch branch = repo.Branches[topicBranch1Name];
+                Branch upstream = repo.Branches[conflictBranch1Name];
+                Branch onto = repo.Branches[conflictBranch1Name];
+
+                RebaseOptions options = new RebaseOptions()
+                {
+                    FileConflictStrategy = CheckoutFileConflictStrategy.Ours,
+                };
+
+                RebaseResult rebaseResult = repo.Rebase.Start(branch, upstream, onto, Constants.Identity, options);
+
+                // Verify that we have a conflict.
+                Assert.Equal(CurrentOperation.RebaseMerge, repo.Info.CurrentOperation);
+                Assert.Equal(RebaseStatus.Conflicts, rebaseResult.Status);
+                Assert.True(repo.RetrieveStatus().IsDirty);
+                Assert.False(repo.Index.IsFullyMerged);
+                Assert.Equal(0, rebaseResult.CompletedStepCount);
+                Assert.Equal(3, rebaseResult.TotalStepCount);
+
+                string conflictFile = filePathB;
+                // Get the information on the conflict.
+                Conflict conflict = repo.Index.Conflicts[conflictFile];
+
+                Assert.NotNull(conflict);
+                Assert.NotNull(conflict.Theirs);
+                Assert.NotNull(conflict.Ours);
+
+                Blob expectedBlob = repo.Lookup<Blob>(conflict.Ours.Id);
+
+                // Check the content of the file on disk matches what is expected.
+                string expectedContent = expectedBlob.GetContentText(new FilteringOptions(conflictFile));
+                Assert.Equal(expectedContent, File.ReadAllText(Path.Combine(repo.Info.WorkingDirectory, conflictFile)));
             }
         }
 
