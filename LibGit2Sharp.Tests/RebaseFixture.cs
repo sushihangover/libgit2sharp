@@ -16,6 +16,11 @@ namespace LibGit2Sharp.Tests
         const string conflictBranch1Name = "C1";
         const string topicBranch1PrimeName = "T1Prime";
 
+        string filePathA = "a.txt";
+        string filePathB = "b.txt";
+        string filePathC = "c.txt";
+        string filePathD = "d.txt";
+
         [Theory]
         [InlineData(topicBranch2Name, topicBranch2Name, topicBranch1Name, masterBranch1Name, 3)]
         [InlineData(topicBranch2Name, topicBranch2Name, topicBranch1Name, topicBranch1Name, 3)]
@@ -310,9 +315,6 @@ namespace LibGit2Sharp.Tests
                 Assert.Equal(0, afterStepCallCount);
                 Assert.True(wasCheckoutProgressCalled, "CheckoutProgress callback was not called.");
 
-                // TODO: investigate following statement.
-                // Assert.True(wasCheckoutNotifyCalled, "CheckoutNotify callback was not called.");
-
                 // Resolve the conflict
                 foreach (Conflict conflict in repo.Index.Conflicts)
                 {
@@ -339,6 +341,55 @@ namespace LibGit2Sharp.Tests
                 Assert.Equal(3, afterStepCallCount);
                 Assert.True(wasCheckoutProgressCalled, "CheckoutProgress callback was not called.");
                 Assert.True(wasCheckoutNotifyCalled, "CheckoutNotify callback was not called.");
+            }
+        }
+
+        [Fact]
+        public void ContinuingRebaseWithUnstagedChangesThrows()
+        {
+            SelfCleaningDirectory scd = BuildSelfCleaningDirectory();
+            var path = Repository.Init(scd.DirectoryPath);
+            using (Repository repo = new Repository(path))
+            {
+                ConstructRebaseTestRepository(repo);
+
+                repo.Checkout(topicBranch1Name);
+                Assert.False(repo.RetrieveStatus().IsDirty);
+
+                Branch branch = repo.Branches[topicBranch1Name];
+                Branch upstream = repo.Branches[conflictBranch1Name];
+                Branch onto = repo.Branches[conflictBranch1Name];
+
+                RebaseResult rebaseResult = repo.Rebase.Start(branch, upstream, onto, Constants.Identity, null);
+
+                // Verify that we have a conflict.
+                Assert.Equal(CurrentOperation.RebaseMerge, repo.Info.CurrentOperation);
+                Assert.Equal(RebaseStatus.Conflicts, rebaseResult.Status);
+                Assert.True(repo.RetrieveStatus().IsDirty);
+                Assert.False(repo.Index.IsFullyMerged);
+                Assert.Equal(0, rebaseResult.CompletedStepCount);
+                Assert.Equal(3, rebaseResult.TotalStepCount);
+
+                Assert.Throws<UnmergedIndexEntriesException>(() =>
+                    repo.Rebase.Continue(Constants.Identity, null));
+
+                // Resolve the conflict
+                foreach (Conflict conflict in repo.Index.Conflicts)
+                {
+                    Touch(repo.Info.WorkingDirectory,
+                          conflict.Theirs.Path,
+                          repo.Lookup<Blob>(conflict.Theirs.Id).GetContentText(new FilteringOptions(conflict.Theirs.Path)));
+                    repo.Stage(conflict.Theirs.Path);
+                }
+
+                Touch(repo.Info.WorkingDirectory,
+                    filePathA,
+                    "Unstaged content");
+
+                Assert.Throws<UnmergedIndexEntriesException>(() =>
+                    repo.Rebase.Continue(Constants.Identity, null));
+
+                Assert.True(repo.Index.IsFullyMerged);
             }
         }
 
@@ -571,22 +622,18 @@ namespace LibGit2Sharp.Tests
             //                       ---*
             //                          |
             //                          C1
-            string filePathA = "a.txt";
             const string fileContentA1 = "A1";
 
-            string filePathB = "b.txt";
             const string fileContentB1 = "B1";
             const string fileContentB2 = "B2";
             const string fileContentB3 = "B3";
             const string fileContentB4 = "B4";
 
-            string filePathC = "c.txt";
             const string fileContentC1 = "C1";
             const string fileContentC2 = "C2";
             const string fileContentC3 = "C3";
             const string fileContentC4 = "C4";
 
-            string filePathD = "d.txt";
             const string fileContentD1 = "D1";
             const string fileContentD2 = "D2";
             const string fileContentD3 = "D3";
