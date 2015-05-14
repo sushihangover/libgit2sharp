@@ -744,7 +744,7 @@ namespace LibGit2Sharp.Core
 
         [DllImport(libgit2)]
         internal static extern int git_note_default_ref(
-            [MarshalAs(UnmanagedType.CustomMarshaler, MarshalCookie = UniqueId.UniqueIdentifier, MarshalTypeRef = typeof(LaxUtf8NoCleanupMarshaler))] out string notes_ref,
+            GitBuf buf,
             RepositorySafeHandle repo);
 
         internal delegate int git_note_foreach_cb(
@@ -1064,12 +1064,14 @@ namespace LibGit2Sharp.Core
 
         [DllImport(libgit2)]
         internal static extern int git_remote_set_url(
-            RemoteSafeHandle remote,
+            RepositorySafeHandle repo,
+            [MarshalAs(UnmanagedType.CustomMarshaler, MarshalCookie = UniqueId.UniqueIdentifier, MarshalTypeRef = typeof(StrictUtf8Marshaler))] string remote_name,
             [MarshalAs(UnmanagedType.CustomMarshaler, MarshalCookie = UniqueId.UniqueIdentifier, MarshalTypeRef = typeof(StrictUtf8Marshaler))] string url);
 
         [DllImport(libgit2)]
         internal static extern int git_remote_set_pushurl(
-            RemoteSafeHandle remote,
+            RepositorySafeHandle repo,
+            [MarshalAs(UnmanagedType.CustomMarshaler, MarshalCookie = UniqueId.UniqueIdentifier, MarshalTypeRef = typeof(StrictUtf8Marshaler))] string remote_name,
             [MarshalAs(UnmanagedType.CustomMarshaler, MarshalCookie = UniqueId.UniqueIdentifier, MarshalTypeRef = typeof(StrictUtf8Marshaler))] string url);
 
         [DllImport(libgit2)]
@@ -1106,7 +1108,10 @@ namespace LibGit2Sharp.Core
         internal static extern string git_remote_pushurl(RemoteSafeHandle remote);
 
         [DllImport(libgit2)]
-        internal static extern void git_remote_set_autotag(RemoteSafeHandle remote, TagFetchMode option);
+        internal static extern void git_remote_set_autotag(
+            RepositorySafeHandle repo,
+            [MarshalAs(UnmanagedType.CustomMarshaler, MarshalCookie = UniqueId.UniqueIdentifier, MarshalTypeRef = typeof(StrictUtf8Marshaler))] string remote_name,
+            TagFetchMode option);
 
         [DllImport(libgit2)]
         internal static extern int git_remote_set_callbacks(

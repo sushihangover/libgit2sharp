@@ -9,11 +9,12 @@ namespace LibGit2Sharp
     /// <summary>
     /// Exposes properties of a remote that can be updated.
     /// </summary>
-    public class RemoteUpdater : IDisposable
+    public class RemoteUpdater
     {
         private readonly UpdatingCollection<string> fetchRefSpecs;
         private readonly UpdatingCollection<string> pushRefSpecs;
-        private readonly RemoteSafeHandle remoteHandle;
+        private readonly RepositorySafeHandle repo;
+        private readonly Remote remote;
 
         /// <summary>
         /// Needed for mocking purposes.
@@ -29,29 +30,40 @@ namespace LibGit2Sharp
             fetchRefSpecs = new UpdatingCollection<string>(GetFetchRefSpecs, SetFetchRefSpecs);
             pushRefSpecs = new UpdatingCollection<string>(GetPushRefSpecs, SetPushRefSpecs);
 
-            remoteHandle = Proxy.git_remote_lookup(repo.Handle, remote.Name, true);
+            this.repo = repo.Handle;
+            this.remote = remote;
         }
 
         private IEnumerable<string> GetFetchRefSpecs()
         {
-            return Proxy.git_remote_get_fetch_refspecs(remoteHandle);
+            using (var remoteHandle = Proxy.git_remote_lookup(repo, remote.Name, true))
+            {
+                return Proxy.git_remote_get_fetch_refspecs(remoteHandle);
+            }
         }
 
         private void SetFetchRefSpecs(IEnumerable<string> value)
         {
-            Proxy.git_remote_set_fetch_refspecs(remoteHandle, value);
-            Proxy.git_remote_save(remoteHandle);
+            using (var remoteHandle = Proxy.git_remote_lookup(repo, remote.Name, true))
+            {
+                Proxy.git_remote_set_fetch_refspecs(remoteHandle, value);
+            }
         }
 
         private IEnumerable<string> GetPushRefSpecs()
         {
-            return Proxy.git_remote_get_push_refspecs(remoteHandle);
+            using (var remoteHandle = Proxy.git_remote_lookup(repo, remote.Name, true))
+            {
+                return Proxy.git_remote_get_push_refspecs(remoteHandle);
+            }
         }
 
         private void SetPushRefSpecs(IEnumerable<string> value)
         {
-            Proxy.git_remote_set_push_refspecs(remoteHandle, value);
-            Proxy.git_remote_save(remoteHandle);
+            using (var remoteHandle = Proxy.git_remote_lookup(repo, remote.Name, true))
+            {
+                Proxy.git_remote_set_push_refspecs(remoteHandle, value);
+            }
         }
 
         /// <summary>
@@ -61,8 +73,7 @@ namespace LibGit2Sharp
         {
             set
             {
-                Proxy.git_remote_set_autotag(remoteHandle, value);
-                Proxy.git_remote_save(remoteHandle);
+                Proxy.git_remote_set_autotag(repo, remote.Name, value);
             }
         }
 
@@ -73,8 +84,7 @@ namespace LibGit2Sharp
         {
             set
             {
-                Proxy.git_remote_set_url(remoteHandle, value);
-                Proxy.git_remote_save(remoteHandle);
+                Proxy.git_remote_set_url(repo, remote.Name, value);
             }
         }
         
@@ -85,8 +95,7 @@ namespace LibGit2Sharp
         {
             set
             {
-                Proxy.git_remote_set_pushurl(remoteHandle, value);
-                Proxy.git_remote_save(remoteHandle);
+                Proxy.git_remote_set_pushurl(repo, remote.Name, value);
             }
         }
 
@@ -187,14 +196,6 @@ namespace LibGit2Sharp
             {
                 setter(list.Value);
             }
-        }
-
-        /// <summary>
-        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
-        /// </summary>
-        public void Dispose()
-        {
-            remoteHandle.Dispose();
         }
     }
 }

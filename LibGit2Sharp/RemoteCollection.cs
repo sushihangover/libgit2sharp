@@ -57,12 +57,10 @@ namespace LibGit2Sharp
         /// <returns>The updated remote.</returns>
         public virtual Remote Update(Remote remote, params Action<RemoteUpdater>[] actions)
         {
-            using (var updater = new RemoteUpdater(this.repository, remote))
+            var updater = new RemoteUpdater(this.repository, remote);
+            foreach (Action<RemoteUpdater> action in actions)
             {
-                foreach (Action<RemoteUpdater> action in actions)
-                {
-                    action(updater);
-                }
+                action(updater);
             }
 
             return this[remote.Name];

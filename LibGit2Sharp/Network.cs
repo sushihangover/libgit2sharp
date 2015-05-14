@@ -97,7 +97,7 @@ namespace LibGit2Sharp
 
             if (options.TagFetchMode.HasValue)
             {
-                Proxy.git_remote_set_autotag(remoteHandle, options.TagFetchMode.Value);
+                // Proxy.git_remote_set_autotag(remoteHandle, options.TagFetchMode.Value);
             }
 
             var callbacks = new RemoteCallbacks(options);
@@ -304,5 +304,24 @@ namespace LibGit2Sharp
                     (name, url, oid, isMerge) => new FetchHead(repository, name, url, oid, isMerge, i++));
             }
         }
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public enum FetchPruneStrategy
+    { 
+        /**
+         * Use the setting from the configuration
+         */
+        Fallback = 0,
+        /**
+         * Force pruning on
+         */
+        Prune,
+        /**
+         * Force pruning off
+         */
+        NoPrune,
     }
 }
