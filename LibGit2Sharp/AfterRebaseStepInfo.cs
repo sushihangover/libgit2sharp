@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-namespace LibGit2Sharp
+﻿namespace LibGit2Sharp
 {
     /// <summary>
     /// Information about a rebase step that was just completed.
@@ -16,19 +11,23 @@ namespace LibGit2Sharp
         protected AfterRebaseStepInfo()
         { }
 
-        internal AfterRebaseStepInfo(RebaseStepInfo stepInfo, Commit commit)
+        internal AfterRebaseStepInfo(RebaseStepInfo stepInfo, Commit commit, long completedStepIndex, long totalStepCount)
         {
             StepInfo = stepInfo;
             Commit = commit;
             WasPatchAlreadyApplied = false;
+            CompletedStepIndex = completedStepIndex;
+            TotalStepCount = totalStepCount;
         }
 
         /// <summary>
         /// Constructor to call when the patch has already been applied for this step.
         /// </summary>
         /// <param name="stepInfo"></param>
-        internal AfterRebaseStepInfo(RebaseStepInfo stepInfo)
-            : this (stepInfo, null)
+        /// <param name="completedStepIndex"/>
+        /// <param name="totalStepCount"></param>
+        internal AfterRebaseStepInfo(RebaseStepInfo stepInfo, long completedStepIndex, long totalStepCount)
+            : this (stepInfo, null, completedStepIndex, totalStepCount)
         {
             WasPatchAlreadyApplied = true;
         }
@@ -48,5 +47,15 @@ namespace LibGit2Sharp
         /// <see cref="AfterRebaseStepInfo.Commit"/> will be null.
         /// </summary>
         public virtual bool WasPatchAlreadyApplied { get; private set; }
+
+        /// <summary>
+        /// The index of the step that was just completed.
+        /// </summary>
+        public virtual long CompletedStepIndex { get; private set; }
+
+        /// <summary>
+        /// The total number of steps in the rebase operation.
+        /// </summary>
+        public virtual long TotalStepCount { get; private set; }
     }
 }

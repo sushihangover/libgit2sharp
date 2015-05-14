@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using LibGit2Sharp.Core;
 using LibGit2Sharp.Core.Handles;
 
@@ -39,11 +36,11 @@ namespace LibGit2Sharp
         /// </summary>
         Fixup,
 
-        /// <summary>
-        /// No commit to cherry-pick. Run the given command and continue
-        /// if successful.
-        /// </summary>
-        Exec
+        // <summary>
+        // No commit to cherry-pick. Run the given command and continue
+        // if successful.
+        // </summary>
+        // Exec
     }
 
     /// <summary>
@@ -169,17 +166,18 @@ namespace LibGit2Sharp
 
                         var stepInfo = new RebaseStepInfo(gitRebasestepInfo.type,
                                                           repository.Lookup<Commit>(new ObjectId(gitRebasestepInfo.id)),
-                                                          LaxUtf8NoCleanupMarshaler.FromNative(gitRebasestepInfo.exec),
-                                                          currentStepIndex,
-                                                          totalStepCount);
+                                                          LaxUtf8NoCleanupMarshaler.FromNative(gitRebasestepInfo.exec));
 
                         if (rebaseCommitResult.WasPatchAlreadyApplied)
                         {
-                            options.RebaseStepCompleted(new AfterRebaseStepInfo(stepInfo));
+                            options.RebaseStepCompleted(new AfterRebaseStepInfo(stepInfo, currentStepIndex, totalStepCount));
                         }
                         else
                         {
-                            options.RebaseStepCompleted(new AfterRebaseStepInfo(stepInfo, repository.Lookup<Commit>(new ObjectId(rebaseCommitResult.CommitId))));
+                            options.RebaseStepCompleted(new AfterRebaseStepInfo(stepInfo,
+                                                                                repository.Lookup<Commit>(new ObjectId(rebaseCommitResult.CommitId)),
+                                                                                currentStepIndex,
+                                                                                totalStepCount));
                         }
                     }
 
@@ -239,14 +237,72 @@ namespace LibGit2Sharp
             using (RebaseSafeHandle rebaseHandle = Proxy.git_rebase_open(repository.Handle, gitRebaseOptions))
             {
                 long currentStepIndex = Proxy.git_rebase_operation_current(rebaseHandle);
-                long totalStepCount = Proxy.git_rebase_operation_entrycount(rebaseHandle);
                 GitRebaseOperation gitRebasestepInfo = Proxy.git_rebase_operation_byindex(rebaseHandle, currentStepIndex);
                 var stepInfo = new RebaseStepInfo(gitRebasestepInfo.type,
                                                   repository.Lookup<Commit>(new ObjectId(gitRebasestepInfo.id)),
-                                                  LaxUtf8NoCleanupMarshaler.FromNative(gitRebasestepInfo.exec),
-                                                  currentStepIndex,
-                                                  totalStepCount);
+                                                  LaxUtf8Marshaler.FromNative(gitRebasestepInfo.exec));
                 return stepInfo;
+            }
+        }
+
+        /// <summary>
+        /// Get info on the specified step
+        /// </summary>
+        /// <param name="stepIndex"></param>
+        /// <returns></returns>
+        public virtual RebaseStepInfo GetStepInfo(long stepIndex)
+        {
+            if (repository.Info.CurrentOperation != LibGit2Sharp.CurrentOperation.RebaseMerge)
+            {
+                return null;
+            }
+
+            GitRebaseOptions gitRebaseOptions = new GitRebaseOptions()
+            {
+                version = 1,
+            };
+
+            using (RebaseSafeHandle rebaseHandle = Proxy.git_rebase_open(repository.Handle, gitRebaseOptions))
+            {
+                GitRebaseOperation gitRebasestepInfo = Proxy.git_rebase_operation_byindex(rebaseHandle, stepIndex);
+                var stepInfo = new RebaseStepInfo(gitRebasestepInfo.type,
+                                                  repository.Lookup<Commit>(new ObjectId(gitRebasestepInfo.id)),
+                                                  LaxUtf8Marshaler.FromNative(gitRebasestepInfo.exec));
+                return stepInfo;
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public virtual long GetCurrentStepIndex()
+        {
+            GitRebaseOptions gitRebaseOptions = new GitRebaseOptions()
+            {
+                version = 1,
+            };
+
+            using (RebaseSafeHandle rebaseHandle = Proxy.git_rebase_open(repository.Handle, gitRebaseOptions))
+            {
+                return Proxy.git_rebase_operation_current(rebaseHandle);
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public virtual long GetTotalStepCount()
+        {
+            GitRebaseOptions gitRebaseOptions = new GitRebaseOptions()
+            {
+                version = 1,
+            };
+
+            using (RebaseSafeHandle rebaseHandle = Proxy.git_rebase_open(repository.Handle, gitRebaseOptions))
+            {
+                return Proxy.git_rebase_operation_entrycount(rebaseHandle);
             }
         }
 

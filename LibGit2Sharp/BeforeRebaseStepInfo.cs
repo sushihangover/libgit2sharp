@@ -16,14 +16,26 @@ namespace LibGit2Sharp
         protected BeforeRebaseStepInfo()
         { }
 
-        internal BeforeRebaseStepInfo(RebaseStepInfo stepInfo)
+        internal BeforeRebaseStepInfo(RebaseStepInfo stepInfo, long stepIndex, long totalStepCount)
         {
             StepInfo = stepInfo;
+            StepIndex = stepIndex;
+            TotalStepCount = totalStepCount;
         }
 
         /// <summary>
         /// Information on the step that is about to be performed.
         /// </summary>
         public virtual RebaseStepInfo StepInfo { get; private set; }
+
+        /// <summary>
+        /// The index of the step that is to be run.
+        /// </summary>
+        public virtual long StepIndex { get; private set; }
+
+        /// <summary>
+        /// The total number of steps in the rebase operation.
+        /// </summary>
+        public virtual long TotalStepCount { get; private set; }
     }
 }

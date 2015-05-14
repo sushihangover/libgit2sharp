@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using LibGit2Sharp.Tests.TestHelpers;
 using Xunit;
 using Xunit.Extensions;
-using System.IO;
 
 namespace LibGit2Sharp.Tests
 {
@@ -52,6 +52,9 @@ namespace LibGit2Sharp.Tests
 
                 int beforeStepCallCount = 0;
                 int afterStepCallCount = 0;
+                bool beforeRebaseStepCountCorrect = true;
+                bool afterRebaseStepCountCorrect = true;
+                bool totalStepCountCorrect = true;
 
                 List<Commit> PreRebaseCommits = new List<Commit>();
                 List<CompletedRebaseStepInfo> PostRebaseResults = new List<CompletedRebaseStepInfo>();
@@ -61,11 +64,15 @@ namespace LibGit2Sharp.Tests
                 {
                     RebaseStepStarting =  x =>
                     {
+                        beforeRebaseStepCountCorrect &= beforeStepCallCount == x.StepIndex;
+                        totalStepCountCorrect &= (x.TotalStepCount == stepCount);
                         beforeStepCallCount++;
                         PreRebaseCommits.Add(x.StepInfo.Commit);
                     },
                     RebaseStepCompleted = x =>
                     {
+                        afterRebaseStepCountCorrect &= (afterStepCallCount == x.CompletedStepIndex);
+                        totalStepCountCorrect &= (x.TotalStepCount == stepCount);
                         afterStepCallCount++;
                         PostRebaseResults.Add(new CompletedRebaseStepInfo(x.Commit, x.WasPatchAlreadyApplied));
                     },
@@ -74,6 +81,9 @@ namespace LibGit2Sharp.Tests
                 RebaseResult rebaseResult = repo.Rebase.Start(branch, upstream, onto, Constants.Identity, options);
 
                 // Validation:
+                Assert.True(afterRebaseStepCountCorrect, "Unexpected CompletedStepIndex value in RebaseStepCompleted");
+                Assert.True(beforeRebaseStepCountCorrect, "Unexpected StepIndex value in RebaseStepStarting");
+                Assert.True(totalStepCountCorrect, "Unexpected TotalStepcount value in Rebase step callback");
                 Assert.Equal(RebaseStatus.Complete, rebaseResult.Status);
                 Assert.Equal(stepCount, rebaseResult.TotalStepCount);
                 Assert.Null(rebaseResult.CurrentStepInfo);
@@ -467,8 +477,9 @@ namespace LibGit2Sharp.Tests
                 Assert.Equal(3, rebaseResult.TotalStepCount);
 
                 RebaseStepInfo info = repo.Rebase.GetCurrentStepInfo();
-                Assert.Equal(0, info.CurrentStepIndex);
-                Assert.Equal(3, info.TotalStepCount);
+
+                Assert.Equal(0, repo.Rebase.GetCurrentStepIndex());
+                Assert.Equal(3, repo.Rebase.GetTotalStepCount());
                 Assert.Equal(RebaseStepOperation.Pick, info.Type);
             }
         }

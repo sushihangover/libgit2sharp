@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using LibGit2Sharp.Core;
-
-namespace LibGit2Sharp
+﻿namespace LibGit2Sharp
 {
     /// <summary>
     /// Information on a particular step of a rebase operation.
@@ -17,13 +11,11 @@ namespace LibGit2Sharp
         protected RebaseStepInfo()
         { }
 
-        internal RebaseStepInfo(RebaseStepOperation type, Commit commit, string exec, long stepIndex, long totalStepCount)
+        internal RebaseStepInfo(RebaseStepOperation type, Commit commit, string exec)
         {
             Type = type;
             Commit = commit;
             Exec = exec;
-            CurrentStepIndex = stepIndex;
-            TotalStepCount = totalStepCount;
         }
 
         /// <summary>
@@ -40,15 +32,5 @@ namespace LibGit2Sharp
         /// Command to execute, if any.
         /// </summary>
         public virtual string Exec { get; private set; }
-
-        /// <summary>
-        /// The index of this step.
-        /// </summary>
-        public virtual long CurrentStepIndex { get; private set; }
-
-        /// <summary>
-        /// The total number of steps.
-        /// </summary>
-        public virtual long TotalStepCount { get; private set; }
     }
 }
