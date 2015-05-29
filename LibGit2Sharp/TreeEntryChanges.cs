@@ -25,6 +25,8 @@ namespace LibGit2Sharp
             OldMode = (Mode)delta.OldFile.Mode;
             Oid = delta.NewFile.Id;
             OldOid = delta.OldFile.Id;
+            Exists = (delta.NewFile.Flags & GitDiffFlags.GIT_DIFF_FLAG_EXISTS) != 0;
+            OldExists = (delta.OldFile.Flags & GitDiffFlags.GIT_DIFF_FLAG_EXISTS) != 0;
 
             Status = (delta.Status == ChangeKind.Untracked || delta.Status == ChangeKind.Ignored)
                 ? ChangeKind.Added
@@ -47,6 +49,11 @@ namespace LibGit2Sharp
         public virtual ObjectId Oid { get; private set; }
 
         /// <summary>
+        /// The file exists (this is not a deletion.)
+        /// </summary>
+        public virtual bool Exists { get; private set; }
+
+        /// <summary>
         /// The kind of change that has been done (added, deleted, modified ...).
         /// </summary>
         public virtual ChangeKind Status { get; private set; }
@@ -65,6 +72,11 @@ namespace LibGit2Sharp
         /// The old content hash.
         /// </summary>
         public virtual ObjectId OldOid { get; private set; }
+
+        /// <summary>
+        /// The old side exists (this is not an add, or an add/add conflict.)
+        /// </summary>
+        public virtual bool OldExists { get; private set; }
 
         private string DebuggerDisplay
         {
