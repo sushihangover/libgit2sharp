@@ -365,6 +365,7 @@ namespace LibGit2Sharp.Tests
             var path = SandboxMergedTestRepo();
             using (var repo = new Repository(path))
             {
+                repo.Config.Set<bool>("core.autocrlf", true);
                 File.WriteAllText(Path.Combine(repo.Info.WorkingDirectory, ".gitignore"),
                     String.Format("{0}\n", filename));
 
