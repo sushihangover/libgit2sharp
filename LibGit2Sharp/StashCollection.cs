@@ -132,6 +132,74 @@ namespace LibGit2Sharp
         }
 
         /// <summary>
+        /// Applies a single stashed state from the stash list using the default options.
+        /// </summary>
+        /// <param name="index">the index of the stash to remove (0 being the most recent one).</param>
+        public virtual StashApplyStatus Apply(int index)
+        {
+            return Apply(index, null);
+        }
+
+        /// <summary>
+        /// Applies a single stashed state from the stash list
+        /// </summary>
+        /// <param name="index">the index of the stash to remove (0 being the most recent one).</param>
+        /// <param name="options">the options to use for checking out the stash.</param>
+        public virtual StashApplyStatus Apply(int index, StashApplyOptions options)
+        {
+            return ApplyOrPop(index, options, Proxy.git_stash_apply);
+        }
+
+        /// <summary>
+        /// Pops a single stashed state from the stash list using the default options.
+        /// </summary>
+        /// <param name="index">the index of the stash to remove (0 being the most recent one).</param>
+        public virtual StashApplyStatus Pop(int index)
+        {
+            return Pop(index, null);
+        }
+
+        /// <summary>
+        /// Pops a single stashed state from the stash list
+        /// </summary>
+        /// <param name="index">the index of the stash to remove (0 being the most recent one).</param>
+        /// <param name="options">the options to use for checking out the stash.</param>
+        public virtual StashApplyStatus Pop(int index, StashApplyOptions options)
+        {
+            return ApplyOrPop(index, options, Proxy.git_stash_pop);
+        }
+
+        private delegate StashApplyStatus ApplyPopHandler(LibGit2Sharp.Core.Handles.RepositorySafeHandle handle, int index, GitStashApplyOpts options);
+        private StashApplyStatus ApplyOrPop(int index, StashApplyOptions options, ApplyPopHandler applyOrPop)
+        {
+            if (index < 0)
+            {
+                throw new ArgumentException("The passed index must be a positive integer.", "index");
+            }
+
+            if (options == null)
+            {
+                options = new StashApplyOptions();
+            }
+
+            using (GitCheckoutOptsWrapper checkoutOptionsWrapper = new GitCheckoutOptsWrapper(options.CheckoutOptions ?? new CheckoutOptions()))
+            {
+                var opts = new GitStashApplyOpts
+                {
+                    CheckoutOptions = checkoutOptionsWrapper.Options,
+                    Flags = options.ApplyModifiers,
+                };
+
+                if (options.ProgressHandler != null)
+                {
+                    opts.ApplyProgressCallback = (progress, payload) => options.ProgressHandler(progress) ? 0 : -1;
+                }
+
+                return applyOrPop(repo.Handle, index, opts);
+            }
+        }
+
+        /// <summary>
         /// Remove a single stashed state from the stash list.
         /// </summary>
         /// <param name="index">The index of the stash to remove (0 being the most recent one).</param>
