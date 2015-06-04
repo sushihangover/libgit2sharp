@@ -61,7 +61,7 @@ test_script:
 - '%xunit_runner%  "%APPVEYOR_BUILD_FOLDER%\LibGit2Sharp.Tests\bin\Release\LibGit2Sharp.Tests.dll" /appveyor'
 - IF %ERRORLEVEL% NEQ 0 EXIT /B %ERRORLEVEL%
 
-on_success:
+after_test:
 - ps: |
     & "$env:APPVEYOR_BUILD_FOLDER\nuget.package\BuildNugetPackage.ps1" -commitSha "$env:APPVEYOR_REPO_COMMIT" -postBuild  { sourcelink index -pr LibGit2Sharp.csproj -pp Configuration Release -nf Core\NativeDllName.cs -nf Core\UniqueIdentifier.cs -nf Properties\AssemblyInfo.cs -r .. -u 'https://raw.githubusercontent.com/libgit2/libgit2sharp/{0}/%var2%' }
     Add-Type -Path "$env:APPVEYOR_BUILD_FOLDER\LibGit2Sharp\bin\Release\LibGit2Sharp.dll"
@@ -70,6 +70,13 @@ on_success:
     {
       Get-ChildItem "$env:APPVEYOR_BUILD_FOLDER\LibGit2sharp\*.nupkg" | % { Push-AppveyorArtifact $_.FullName -FileName $_.Name }
     }
+
+deploy:
+  - provider: NuGet
+    api_key:
+      secure: A/hHqzkaA9isGv9CS3x+rLbz3OI+BRevvYEQRY4J5J3kwLKM5WPhVpBPzrQQH4tc
+    skip_symbols: true
+    artifact: /.*\.nupkg/
 
 notifications:
 - provider: Email
