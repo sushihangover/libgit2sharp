@@ -4,6 +4,7 @@ branches:
   only:
   - master
   - vNext
+  - nsfw
 
 skip_tags: true
 
@@ -62,6 +63,17 @@ install:
 
     Write-Host "Should publish on success = " -NoNewLine
     Write-Host $Env:publish_on_success -ForegroundColor "Green"
+
+    # To be dropped - For testing purpose
+    $Env:SHOULD_PACKAGE_NUGET_ARTIFACT = $False
+    $Env:SHOULD_RUN_COVERITY_ANALYSIS = $True
+    Write-Host "Should run Coverity analysis = " -NoNewLine
+    Write-Host $Env:SHOULD_RUN_COVERITY_ANALYSIS -ForegroundColor "Green"
+    Write-Host "Should package Nuget artifact = " -NoNewLine
+    Write-Host $Env:SHOULD_PACKAGE_NUGET_ARTIFACT -ForegroundColor "Green"
+    Write-Host "Should publish on success = " -NoNewLine
+    Write-Host $Env:publish_on_success -ForegroundColor "Green"
+    # To be dropped
 
     If ($Env:SHOULD_PACKAGE_NUGET_ARTIFACT -eq $True)
     {
