@@ -143,13 +143,16 @@ after_test:
 
       Write-Host "Uploading Coverity analysis result..." -ForegroundColor "Green"
 
-      curl --fail --silent --show-error `
+      curl --silent --show-error `
+        --output curl-out.txt `
         --form token="$Env:coverity_token" `
         --form email="$Env:coverity_email" `
         --form "file=@$Env:APPVEYOR_BUILD_FOLDER\$Env:APPVEYOR_PROJECT_NAME.zip" `
         --form version="$Env:APPVEYOR_REPO_COMMIT" `
         --form description="CI server scheduled build." `
         https://scan.coverity.com/builds?project=libgit2%2Flibgit2sharp
+
+        cat .\curl-out.txt
     }
 
 notifications:
