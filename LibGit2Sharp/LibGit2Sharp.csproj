@@ -28,9 +28,9 @@
     <DocumentationFile>bin\Debug\LibGit2Sharp.xml</DocumentationFile>
     <CustomCommands>
       <CustomCommands>
-        <Command type="BeforeBuild" command="xbuild Lib/CustomBuildTasks/CustomBuildTasksExe/CustomBuildTasksExe.csproj" workingdir="${SolutionDir}" Condition=" '$(OS)' != 'Windows_NT' "/>
-        <Command type="BeforeBuild" command="mono ../Lib/CustomBuildTasks/CustomBuildTasksExe/CustomBuildTasksExe.exe UniqueIdentifierTask" workingdir="${ProjectDir}" Condition=" '$(OS)' != 'Windows_NT' " />
-        <Command type="BeforeBuild" command="mono ../Lib/CustomBuildTasks/CustomBuildTasksExe/CustomBuildTasksExe.exe NativeDllNameTask" workingdir="${ProjectDir}" Condition=" '$(OS)' != 'Windows_NT' " />
+        <Command type="BeforeBuild" command="xbuild Lib/CustomBuildTasks/CustomBuildTasksExe/CustomBuildTasksExe.csproj" workingdir="${SolutionDir}" />
+        <Command type="BeforeBuild" command="mono ../Lib/CustomBuildTasks/CustomBuildTasksExe/CustomBuildTasksExe.exe UniqueIdentifierTask" workingdir="${ProjectDir}" />
+        <Command type="BeforeBuild" command="mono ../Lib/CustomBuildTasks/CustomBuildTasksExe/CustomBuildTasksExe.exe NativeDllNameTask" workingdir="${ProjectDir}" />
       </CustomCommands>
     </CustomCommands>
   </PropertyGroup>
@@ -43,13 +43,6 @@
     <WarningLevel>4</WarningLevel>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <DocumentationFile>bin\Release\LibGit2Sharp.xml</DocumentationFile>
-    <CustomCommands>
-      <CustomCommands>
-        <Command type="BeforeBuild" command="xbuild Lib/CustomBuildTasks/CustomBuildTasksExe/CustomBuildTasksExe.csproj" workingdir="${SolutionDir}" Condition=" '$(OS)' != 'Windows_NT' "/>
-        <Command type="BeforeBuild" command="mono ../Lib/CustomBuildTasks/CustomBuildTasksExe/CustomBuildTasksExe.exe UniqueIdentifierTask" workingdir="${ProjectDir}" Condition=" '$(OS)' != 'Windows_NT' " />
-        <Command type="BeforeBuild" command="mono ../Lib/CustomBuildTasks/CustomBuildTasksExe/CustomBuildTasksExe.exe NativeDllNameTask" workingdir="${ProjectDir}" Condition=" '$(OS)' != 'Windows_NT' " />
-      </CustomCommands>
-    </CustomCommands>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
